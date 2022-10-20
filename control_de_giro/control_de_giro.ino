@@ -5,6 +5,7 @@
 #define In2 9   // PIN7 del L293D 
 
 unsigned int acceleration_ramp = 0, change_twirl = 0, stop = 0;
+unsigned int actual_state, old_state;
 
 void spinControl(int pin_stop, int direction, int turn_reversal);
 void accelerationStop(int direction);
@@ -23,7 +24,8 @@ void setup(){
 void loop(){
   if(!digitalRead(S1) || change_twirl == In2){ //Gira a la derecha
     change_twirl = 0;
-    spinControl(In2, In1, S3);
+    old_state = In1;
+    if(actual_state != old_state) spinControl(In2, In1, S3);
   }
   
   else if(!digitalRead(S2) && acceleration_ramp > 0){ //Detiene el motor
@@ -35,12 +37,13 @@ void loop(){
 
   else if(!digitalRead(S3) || change_twirl == In1){//Gira a la izquierda
     change_twirl = 0;
-    spinControl(In1, In2, S1);
+    old_state = In2;
+    if(actual_state != old_state) spinControl(In1, In2, S1);
   }
 }
 
 void spinControl(int pin_stop, int direction, int turn_reversal){
-    
+  actual_state = direction;  
   if(acceleration_ramp > 0){ //En caso de inversion de giro, primero desacelera
     accelerationStop(pin_stop);
   }else analogWrite(pin_stop, 0);
@@ -64,6 +67,7 @@ void spinControl(int pin_stop, int direction, int turn_reversal){
 
     if(!digitalRead(turn_reversal)){ //Inversion de giro derecha o izquierda 
       accelerationStop(direction);
+      actual_state = pin_stop;
       change_twirl = direction;
       break;
     }
